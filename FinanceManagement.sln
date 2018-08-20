@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2026
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinanceManagement", "FinanceManagement\FinanceManagement.csproj", "{1C628E2F-BC45-46AA-BFD0-77467EEA5E11}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinanceManagement.Tests", "FinanceManagement.Tests\FinanceManagement.Tests.csproj", "{8EABB50F-421F-4F98-A685-24FE1A6C3F63}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1C628E2F-BC45-46AA-BFD0-77467EEA5E11}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C628E2F-BC45-46AA-BFD0-77467EEA5E11}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C628E2F-BC45-46AA-BFD0-77467EEA5E11}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C628E2F-BC45-46AA-BFD0-77467EEA5E11}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8EABB50F-421F-4F98-A685-24FE1A6C3F63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8EABB50F-421F-4F98-A685-24FE1A6C3F63}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8EABB50F-421F-4F98-A685-24FE1A6C3F63}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8EABB50F-421F-4F98-A685-24FE1A6C3F63}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CB0B8624-E86D-45E8-A23E-FF63D25CDA8A}
+	EndGlobalSection
+EndGlobal
