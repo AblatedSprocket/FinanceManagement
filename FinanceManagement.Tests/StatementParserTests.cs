@@ -13,13 +13,29 @@ namespace FinanceManagement.Tests
     [TestClass]
     public class StatementParserTests
     {
-        StatementParser parser = new StatementParser(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Unprocessed"));
+        StatementParser parser = new StatementParser(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TestFiles"));
         [TestMethod]
-        public void ParseMetroStatements_ParsesAllMetroStatements()
+        public void ParseAlaskaStatementsFromCsv_ParsesStatementsSuccessfully()
+        {
+            //ARRANGE:
+            //ACT:
+            IEnumerable<Transaction> transactions = parser.ParseAlaskaStatementsFromCsv();
+            //ASSERT
+            Assert.IsNotNull(transactions);
+        }
+        [TestMethod]
+        public void ParseMetroStatementsFromCsv_ParsesAllMetroStatements()
         {
             List<Transaction> transactions = parser.ParseMetroStatementsFromCsv();
             Transaction missed = transactions.Where(t => t.Description.Contains("Home Banking")).FirstOrDefault();
-            Assert.IsTrue(missed != null);
+            Assert.IsNotNull(missed);
+        }
+        [TestMethod]
+        public void ParseMetroStatementsFromCsv_ParsesStatementsSuccessfully()
+        {
+            IEnumerable<Transaction> transactions = parser.ParseMetroStatementsFromCsv();
+            //ASSERT:
+            Assert.IsNotNull(transactions);
         }
     }
 }

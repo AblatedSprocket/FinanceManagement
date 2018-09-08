@@ -1,8 +1,6 @@
-﻿using FinanceManagement.Utilities;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace FinanceManagement.StatementProcessing
@@ -14,54 +12,155 @@ namespace FinanceManagement.StatementProcessing
         {
             _path = path;
         }
+        public List<Transaction> ParseAlaskaStatementsFromCsv()
+        {
+            try
+            {
+                List<Transaction> transactionList = new List<Transaction>();
+                string[] filePaths = Directory.GetFiles(Path.Combine(_path, "Alaska"), "*.csv", SearchOption.TopDirectoryOnly);
+                foreach (string filePath in filePaths)
+                {
+                    IEnumerable<string> lines = File.ReadLines(filePath);
+                    int index = 0;
+                    foreach (string line in lines)
+                    {
+                        if (index++ == 0)
+                        {
+                            if (line != "Posted Date,Reference Number,Payee,Address,Amount")
+                            {
+                                throw new FormatException("File contents were not formatted correctly!");
+                            }
+                        }
+                        else
+                        {
+                            Match match = Regex.Match(line, "^(?<date>[0-9]{2}/[0-9]{2}/[0-9]{4}?),(?<serialNo>[0-9]+?),\"(?<description>.*?)\",\"(?<address>[A-Z0-9\\- ]*?)\",(?<amount>-?[0-9]+\\.[0-9]{2}?)");
+                            if (match.Success)
+                            {
+                                transactionList.Add(new Transaction
+                                {
+                                    PostDate = Convert.ToDateTime(match.Result("${date}")),
+                                    SerialNumber = match.Result("${serialNo}"),
+                                    Description = match.Result("${description}"),
+                                    Amount = Math.Abs(Convert.ToDecimal(match.Result("${amount}"))),
+                                    Type = Convert.ToDecimal(match.Result("${amount}")) > 0 ? "CR" : "DR"
+                                });
+                            }
+                            else
+                            {
+                                throw new FormatException("Line item is not formatted correctly.");
+                            }
+                        }
+                    }
+                }
+                return transactionList;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error parsing Alaska statements from CSV file.", ex);
+            }
+        }
+        public void ParseLowesStatementsFromCsv()
+        {
+            throw new NotImplementedException("Parsing for Lowe's Statements is not yet implemented");
+        }
+        /// <summary>
+        /// This method works on .csv files downloaded from the Activity tab on Bank of America's website
+        /// </summary>
+        /// <returns></returns>
         public List<Transaction> ParseMetroStatementsFromCsv()
         {
-            List<Transaction> transactionList = new List<Transaction>();
-            // All metro statements are provided with ".TXT" extension
-            string[] filePaths = Directory.GetFiles(Path.Combine(_path, "Metro"), "*.csv", SearchOption.TopDirectoryOnly);
-            foreach (string filePath in filePaths)
+            try
             {
-                try
+                List<Transaction> transactionList = new List<Transaction>();
+                string[] filePaths = Directory.GetFiles(Path.Combine(_path, "Metro"), "*.csv", SearchOption.TopDirectoryOnly);
+                foreach (string filePath in filePaths)
                 {
-                    Logger.Log($"Processing statement at {filePath}.");
-                    string text = File.ReadAllText(filePath);
-                    string data = text.Substring(text.IndexOf("\r\n") + 2);
-                    MatchCollection matches = Regex.Matches(data, "^(?<account>.*?),(?<date>.*?),(?<serial>.*?),\"(?<desc>.*?)\",(?<amount>.*?),(?<method>.*?)\r\n", RegexOptions.Multiline);
+                    IEnumerable<string> lines = File.ReadLines(filePath);
+                    int index = 0;
+                    foreach (string line in lines)
+                    {
+                        if (index++ == 0)
+                        {
+                            if (line != "Account Designator,Posted Date,Serial Number,\"Description\",Amount,CR/DR")
+                            {
+                                throw new FormatException("File contents were not formatted correctly!");
+                            }
+                        }
+                        else
+                        {
+                            Match match = Regex.Match(line, @"^(?<account>[0-9]{4}\s[A-Z]+?)\s+,(?<date>[0-9]{2}/[0-9]{2}/[0-9]{2}?),(?<serialNo>[0-9]+?),(?<description>.*?),(?<amount>[0-9]+\.[0-9]{2}?),(?<type>(CR|DR))");
+                            if (match.Success)
+                            {
+                                transactionList.Add(new Transaction
+                                {
+                                    Account = match.Result("${account}"),
+                                    PostDate = Convert.ToDateTime(match.Result("${date}")),
+                                    SerialNumber = match.Result("${serialNo}"),
+                                    Description = match.Result("${description}"),
+                                    Amount = Convert.ToDecimal(match.Result("${amount}")),
+                                    Type = match.Result("${type}")
+                                });
+                            }
+                            else
+                            {
+                                throw new FormatException("Line item is not formatted correctly.");
+                            }
+                        }
+                    }
+                }
+                return transactionList;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error parsing Metro statements from CSV file.", ex);
+            }
+        }
+        #region Unused
+        [Obsolete("ParseAlaskaStatements is deprecated, please use ParseAlaskaStatementsFromCsv")]
+        public List<Transaction> ParseAlaskaStatements()
+        {
+            try
+            {
+                List<Transaction> transactionList = new List<Transaction>();
+                string[] filPaths = Directory.GetFiles(Path.Combine(_path, "Alaska"), "*.txt", SearchOption.TopDirectoryOnly);
+                foreach (string filePath in filPaths)
+                {
+                    string statementText = File.ReadAllText(filePath);
+                    Match matchtest = Regex.Match(statementText, @"^(?<transDate>\d{2}/\d{2})\s+(?<postDate>\d{2}/\d{2})\s+(?<desc>.+)\s{24}(?<refNum>\s\d+)\s+(?<account>\d+)\s+(?<amount>[\d\.]+)", RegexOptions.Multiline);
+                    if (matchtest.Success)
+                    {
+                        string transDate = matchtest.Result("${transDate}").Trim();
+                        string postDate = matchtest.Result("${postDate}").Trim();
+                        string desc = matchtest.Result("${desc}").Trim();
+                        string refnum = matchtest.Result("${refNum}").Trim();
+                        string account = matchtest.Result("${account}").Trim();
+                        string amount = matchtest.Result("${amount}").Trim();
+                    }
+                    MatchCollection matches = Regex.Matches(statementText, @"^(?<transDate>\d{2}/\d{2})\s+(?<postDate>\d{2}/\d{2})\s+(?<desc>.+)\s{24}(?<refNum>\s\d+)\s+(?<account>\d+)\s+(?<amount>[\d\.]+)", RegexOptions.Multiline);
                     foreach (Match match in matches)
                     {
-                        Transaction transaction = new Transaction()
+                        Transaction transaction = new Transaction
                         {
-                            Account = match.Result("${account}").Trim(),
-                            PostDate = DateTime.Parse(match.Result("${date}")),
-                            SerialNumber = match.Result("${serial}").Trim(),
-                            Description = (match.Result("${desc}").Trim()),
+                            Account = match.Result("${account}"),
+                            TransactionDate = DateTime.Parse(match.Result("${transDate}")),
+                            PostDate = DateTime.Parse(match.Result("${postDate}")),
+                            SerialNumber = match.Result("${refNum}"),
+                            Description = match.Result("${desc}"),
                             Amount = Convert.ToDecimal(match.Result("${amount}")),
+                            Type = "Debit",
                             Category = "Misc"
                         };
-                        switch (match.Result("${method}"))
-                        {
-                            case "DR":
-                                transaction.Type = "Debit";
-                                break;
-                            case "CR":
-                                transaction.Type = "Credit";
-                                break;
-                            default:
-                                transaction.Type = "Debit";
-                                break;
-
-                        }
-                        Logger.Log($"Processed {transaction.Type} transaction of amount ${transaction.Amount}");
                         transactionList.Add(transaction);
                     }
                 }
-                catch (Exception ex)
-                {
-                    Logger.LogException(ex);
-                }
+                return transactionList;
             }
-            return transactionList;
+            catch (Exception ex)
+            {
+                throw new Exception("Error parsing Alaska statements.", ex);
+            }
         }
+        [Obsolete("ParseMetroStatements is deprecated, please use ParseAlaskaStatementsFromCsv")]
         public List<Transaction> ParseMetroStatements()
         {
             List<Transaction> transactionList = new List<Transaction>();
@@ -71,7 +170,6 @@ namespace FinanceManagement.StatementProcessing
             {
                 try
                 {
-                    Logger.Log($"Processing statement at {filePath}.");
                     string statementText = File.ReadAllText(filePath);
                     MatchCollection matches = Regex.Matches(statementText, @"^(?<account>\d+\s\w+)\s+(?<date>\d{2}/\d{2}/\d{2})\s+(?<serial>\d+)\s+(?<desc>.+)\:\s+(?<method>.+?)\s+(?<amount>[\d\.]+?)\s+(?<type>\w+)\s+", RegexOptions.Multiline);
                     foreach (Match match in matches)
@@ -95,87 +193,16 @@ namespace FinanceManagement.StatementProcessing
                                 break;
 
                         }
-                        Logger.Log($"Processed {transaction.Type} transaction of amount ${transaction.Amount}");
                         transactionList.Add(transaction);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogException(ex);
+                    throw new Exception("Error parsing metro statements.", ex);
                 }
             }
             return transactionList;
         }
-        public void ParseLowesStatements()
-        {
-            // Finish later
-            string[] filePaths = Directory.GetFiles(Path.Combine(_path, "Lowes"), "*.pdf", SearchOption.TopDirectoryOnly);
-            foreach (string filePath in filePaths)
-            {
-                string[] statement = PdfParser.ParsePDFStatement(filePath);
-                StringBuilder transactionText = new StringBuilder();
-                // First parse out actual transactions from all the other junk
-                // Go through all pages except last.
-                Match match;
-                for (int i = 0; i < statement.Length; i++)
-                {
-                    string text = statement[i];
-                    // each set of transactions should start with column headers and end with (Continued on next page) ...
-                    match = Regex.Match(statement[i], @"Reference Number/\nTran Date Post Date Description of Transaction or Credit Amount\nInvoice Number\n(?<transactions>(.|\n)*)\(Continued on next page\)");
-                    if (match.Success)
-                    {
-                        transactionText.Append(match.Result("${transactions}"));
-                    }
-                    else
-                    {
-                        // ... unless it's the last page, where the transactions end with fees
-                        match = Regex.Match(statement[i], @"Reference Number/\nTran Date Post Date Description of Transaction or Credit Amount\nInvoice Number\n(?<transactions>(.|\n)*)FEES\nTOTAL FEES FOR THIS PERIOD");
-                        if (match.Success)
-                        {
-                            transactionText.Append(match.Result("${transactions}"));
-                        }
-                    }
-                }
-                // Once the transactions are parsed, pick them out one by one
-                string transactionBlob = transactionText.ToString();
-                Match transMatch = Regex.Match(transactionBlob, @"\d{2}/\d{2}\s+\d+\sSTORE\s");
-            }
-        }
-        public List<Transaction> ParseAlaskaStatements()
-        {
-            List<Transaction> transactionList = new List<Transaction>();
-            string[] filPaths = Directory.GetFiles(Path.Combine(_path, "Alaska"), "*.txt", SearchOption.TopDirectoryOnly);
-            foreach (string filePath in filPaths)
-            {
-                string statementText = File.ReadAllText(filePath);
-                Match matchtest = Regex.Match(statementText, @"^(?<transDate>\d{2}/\d{2})\s+(?<postDate>\d{2}/\d{2})\s+(?<desc>.+)\s{24}(?<refNum>\s\d+)\s+(?<account>\d+)\s+(?<amount>[\d\.]+)", RegexOptions.Multiline);
-                if (matchtest.Success)
-                {
-                    string transDate = matchtest.Result("${transDate}").Trim();
-                    string postDate = matchtest.Result("${postDate}").Trim();
-                    string desc = matchtest.Result("${desc}").Trim();
-                    string refnum = matchtest.Result("${refNum}").Trim();
-                    string account = matchtest.Result("${account}").Trim();
-                    string amount = matchtest.Result("${amount}").Trim();
-                }
-                MatchCollection matches = Regex.Matches(statementText, @"^(?<transDate>\d{2}/\d{2})\s+(?<postDate>\d{2}/\d{2})\s+(?<desc>.+)\s{24}(?<refNum>\s\d+)\s+(?<account>\d+)\s+(?<amount>[\d\.]+)", RegexOptions.Multiline);
-                foreach (Match match in matches)
-                {
-                    Transaction transaction = new Transaction
-                    {
-                        Account = match.Result("${account}"),
-                        TransactionDate = DateTime.Parse(match.Result("${transDate}")),
-                        PostDate = DateTime.Parse(match.Result("${postDate}")),
-                        SerialNumber = match.Result("${refNum}"),
-                        Description = match.Result("${desc}"),
-                        Amount = Convert.ToDecimal(match.Result("${amount}")),
-                        Type = "Debit",
-                        Category = "Misc"
-                    };
-                    transactionList.Add(transaction);
-                }
-            }
-            return transactionList;
-        }
+        #endregion
     }
 }

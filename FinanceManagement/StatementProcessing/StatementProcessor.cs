@@ -19,6 +19,9 @@ namespace FinanceManagement.StatementProcessing
             IEnumerable<Transaction> redundantTransactions = transactions
                                                                 .Where(t => t.Description.Contains("BK OF AMER MC ACH Withdrawal")
                                                                     || t.Description.Contains("CARDMEMBER SERV ACH")
+                                                                    || t.Description.Contains("BA ELECTRONIC PAYMENT")
+                                                                    || t.Description.Contains("BK OF AMER VISA ACH Withdrawal")
+                                                                    || t.Description.Contains("BK OF AMER VISA ACH Withdrawal")
                                                                     || t.Description.Contains("Lowes CC ACH"))
                                                                     .ToList();
             foreach (Transaction transaction in redundantTransactions)
@@ -26,7 +29,7 @@ namespace FinanceManagement.StatementProcessing
                 transactions.Remove(transaction);
             }
             // Add in credit card transactions
-            transactions.AddRange(parser.ParseAlaskaStatements());
+            transactions.AddRange(parser.ParseAlaskaStatementsFromCsv());
             return transactions;
         }
     }

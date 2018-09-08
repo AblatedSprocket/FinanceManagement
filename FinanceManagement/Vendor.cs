@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FinanceManagement
+﻿namespace FinanceManagement
 {
     public class Vendor
     {
